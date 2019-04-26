@@ -1,0 +1,30 @@
+---
+- hosts: localhost
+  tasks:
+
+    - name: "Checking for all required ports accessible from current host."
+      wait_for:
+        host: "{{ansible_default_ipv4.address}}"
+        port: "{{item}}"
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes
+      register: ports_checking
+      with_items:
+        - 443
+        # - 80
+        # - 8443
+
+    # - debug:
+    #     var: ports_checking
+
+    - name: "Checking previous steps failing."
+      fail:
+        msg: "Not all required ports are opened externally. Please check firewall rules."
+      when: ports_checking.failed is defined and ports_checking.failed
+
+    # - name: "Checking authorization page with curl."
+    #   shell: "curl -kL --fail https://{{ansible_default_ipv4.address}}"
+    #   args:
+    #     warn: no
